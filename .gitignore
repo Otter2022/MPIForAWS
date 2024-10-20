@@ -1,0 +1,54 @@
+# Go related
+/bin
+/build
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go dependencies
+vendor/
+
+# Go module files generated during local build
+go.sum
+go.mod
+
+# Compiled Go binaries
+mpi-app
+
+# Logs
+*.log
+
+# IDE/editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker related files
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# AWS Credentials (Do not hardcode AWS credentials or sensitive information!)
+.aws/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+
+# Debug output files
+debug/
+coverage.out
+
+# Testing-related files
+test-results.xml
+test-output/
