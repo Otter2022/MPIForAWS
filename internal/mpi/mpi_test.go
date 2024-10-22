@@ -18,7 +18,7 @@ func TestMPI_Init(t *testing.T) {
 func TestMPI_Send(t *testing.T) {
 	// Assuming MPI_Send sends a message and returns an error if something goes wrong.
 	message := "Hello from node 1"
-	err := MPI_Send(message)
+	err := MPI_Send(message, 1)
 	if err != nil {
 		t.Errorf("MPI_Send() failed with error: %v", err)
 	}
@@ -27,9 +27,11 @@ func TestMPI_Send(t *testing.T) {
 // Test the MPI_Recv function
 func TestMPI_Recv(t *testing.T) {
 	// Assuming MPI_Recv receives a message.
-	received := MPI_Recv()
+	received, err := MPI_Recv(1)
 	if received == "" {
 		t.Errorf("MPI_Recv() failed, expected a message but got empty string")
+	} else if err != nil {
+		t.Errorf("Error")
 	}
 }
 
