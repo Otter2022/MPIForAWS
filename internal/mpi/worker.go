@@ -5,39 +5,54 @@ package mpi
 
 import (
 	"fmt"
+	"log"
 )
 
-// StartWorker starts the worker logic for a given node.
-func StartWorker(config *Config) {
-	fmt.Printf("Node %d started, ready to process tasks.\n", config.NodeRank)
+// StartWorker starts the worker process, receiving tasks and processing them.
+func StartWorker(config *Config) error {
+	// Log the initialization of the worker node
+	log.Printf("Worker node %d started\n", config.NodeRank)
 
-	// Example: Receive a task from the master node
-	task, err := ReceiveMessage(config.SQSQueue)
-	if err != nil {
-		fmt.Printf("Failed to receive task on node %d: %v\n", config.NodeRank, err)
-		return
+	// Simulate receiving and processing tasks in a loop (in real use, you'd implement a termination condition)
+	for {
+		// Receive a message from another node (simulating a task)
+		task, err := MPI_Recv(config.NodeRank - 1) // Simulate receiving from the previous node
+		if err != nil {
+			return fmt.Errorf("worker node %d failed to receive message: %w", config.NodeRank, err)
+		}
+
+		log.Printf("Worker node %d received task: %s\n", config.NodeRank, task)
+
+		// Process the received task
+		result, err := ProcessNodeTask(task)
+		if err != nil {
+			return fmt.Errorf("worker node %d failed to process task: %w", config.NodeRank, err)
+		}
+
+		log.Printf("Worker node %d processed task, result: %s\n", config.NodeRank, result)
+
+		// Simulate sending the result back to another node (e.g., master or next node)
+		err = MPI_Send(result, config.NodeRank+1) // Send result to the next node
+		if err != nil {
+			return fmt.Errorf("worker node %d failed to send result: %w", config.NodeRank, err)
+		}
+
+		log.Printf("Worker node %d sent result to node %d\n", config.NodeRank, config.NodeRank+1)
 	}
 
-	fmt.Printf("Node %d received task: %s\n", config.NodeRank, task)
-
-	// Process the task
-	result, err := ProcessNodeTask(task)
-	if err != nil {
-		fmt.Printf("Node %d failed to process task: %v\n", config.NodeRank, err)
-		return
-	}
-
-	// Send the result back to the master node or next node
-	fmt.Printf("Node %d processed task, result: %v\n", config.NodeRank, result)
-	err = SendMessage(config.SQSQueue, result)
-	if err != nil {
-		fmt.Printf("Failed to send result from node %d: %v\n", config.NodeRank, err)
-	}
+	return nil
 }
 
-// ProcessNodeTask processes the task assigned to the worker node.
+// ProcessNodeTask processes the task assigned to the node and returns the result.
 func ProcessNodeTask(task string) (string, error) {
-	// Example task processing logic (could be any distributed computation)
-	fmt.Printf("Processing task: %s\n", task)
-	return "Task result", nil
+	// Simulate task processing (customize this with your actual task logic)
+	log.Printf("Processing task: %s\n", task)
+
+	// Simulated result of the task
+	result := fmt.Sprintf("Processed task: %s", task)
+
+	// In a real implementation, you would include actual processing logic here
+	// e.g., perform computation, process data, etc.
+
+	return result, nil
 }
