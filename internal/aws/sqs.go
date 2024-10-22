@@ -81,19 +81,16 @@ func DeleteSQSQueue(queueURL string) error {
 func (s *SQSClientCreator) CreateClient() (interface{}, error) {
 	var cfg aws.Config
 	var err error
-	err = nil
 
 	region := os.Getenv("AWS_REGION")
 	if region != "" {
-		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
-		if err != nil {
-			return nil, fmt.Errorf("unable to load AWS config: %w", err)
-		}
+		cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	} else {
-		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
-		if err != nil {
-			return nil, fmt.Errorf("unable to load AWS config: %w", err)
-		}
+		cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to load AWS config: %w", err)
 	}
 
 	client := sqs.NewFromConfig(cfg)

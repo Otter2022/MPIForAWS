@@ -16,9 +16,16 @@ import (
 // SendMessage sends a message to the specified SQS queue
 func SendMessage(queueURL string, message string) error {
 	// Create SQS client
-	client, err := myaws.CreateSQSClient()
+	clientCreator = &myaws.SQSClientCreator{}
+	client, err := clientCreator.CreateClient()
 	if err != nil {
-		return fmt.Errorf("failed to create SQS client: %w", err)
+		return "", fmt.Errorf("failed to create SQS client: %w", err)
+	}
+
+	// Type assert the client to *sqs.Client
+	sqsClient, ok := client.(*sqs.Client)
+	if !ok {
+		log.Fatalf("failed to assert to *sqs.Client")
 	}
 
 	// Send the message
@@ -27,7 +34,7 @@ func SendMessage(queueURL string, message string) error {
 		MessageBody: aws.String(message),
 	}
 
-	_, err = client.SendMessage(context.TODO(), input)
+	_, err = sqsClient.SendMessage(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
