@@ -52,3 +52,4 @@ coverage.out
 # Testing-related files
 test-results.xml
 test-output/
+tests/
