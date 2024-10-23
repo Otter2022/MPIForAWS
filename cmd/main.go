@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// Step 2: Use a predefined VPC ID (replace with your actual VPC ID)
-	vpcId := "vpc-0a74d11d71105f463" // Replace with your actual VPC ID
+	vpcId := "vpc-xxxxxx x" // Replace with your actual VPC ID
 
 	// Step 3: Create a security group for the EC2 instances
 	securityGroupName := "mpi-security-group"
