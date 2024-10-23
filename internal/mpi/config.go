@@ -1,46 +1,14 @@
-// config.go is responsible for loading and managing the configuration required
-// for setting up the MPI environment, such as AWS SQS queue URLs, node ranks,
-// and other settings needed for communication between nodes.
+// config.go
+// This file handles the configuration for the MPI-like framework, including
+// loading environment variables such as node rank and the total number of nodes.
+
 package mpi
 
-import (
-	"os"
-	"strconv"
-)
-
+// Config is a struct that stores the node rank and total number of nodes.
 type Config struct {
 	NodeRank   int
 	TotalNodes int
-	SQSQueue   string
 }
 
-// LoadConfig loads the configuration from environment variables or other sources.
-func LoadConfig() (*Config, error) {
-	nodeRank, err := strconv.Atoi(os.Getenv("NODE_RANK"))
-	if err != nil {
-		return nil, err
-	}
-
-	totalNodes, err := strconv.Atoi(os.Getenv("TOTAL_NODES"))
-	if err != nil {
-		return nil, err
-	}
-
-	sqsQueue := os.Getenv("SQS_QUEUE_URL")
-
-	return &Config{
-		NodeRank:   nodeRank,
-		TotalNodes: totalNodes,
-		SQSQueue:   sqsQueue,
-	}, nil
-}
-
-// GetNodeRank returns the rank of the current node.
-func GetNodeRank(config *Config) int {
-	return config.NodeRank
-}
-
-// GetTotalNodes returns the total number of nodes.
-func GetTotalNodes(config *Config) int {
-	return config.TotalNodes
-}
+// LoadConfig loads the configuration from environment variables (NODE_RANK, TOTAL_NODES).
+func LoadConfig() (*Config, error)

@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package mpi;
+
+option go_package = "path/to/your/go/package";
+
+// Define the message to be passed between nodes
+message Message {
+    string content = 1;       // The message content
+    int32 source_rank = 2;    // Source node rank
+    int32 dest_rank = 3;      // Destination node rank
+    int32 tag = 4;            // Optional message tag
+}
+
+// Define the request for sending a message
+message SendRequest {
+    Message message = 1;
+}
+
+// Define the response for sending a message
+message SendResponse {
+    bool success = 1;
+}
+
+// Define the request for receiving a message
+message RecvRequest {
+    int32 dest_rank = 1;      // Destination node rank (the receiving node)
+    int32 source_rank = 2;    // Source node rank (the sender)
+    int32 tag = 3;            // Optional tag for filtering
+}
+
+// Define the response for receiving a message
+message RecvResponse {
+    Message message = 1;
+}
+
+// Define a barrier synchronization message
+message BarrierRequest {
+    int32 rank = 1;  // Node rank participating in the barrier
+}
+
+message BarrierResponse {
+    bool success = 1;  // Whether all nodes reached the barrier
+}
+
+// Define a broadcast request
+message BroadcastRequest {
+    Message message = 1;
+    int32 source_rank = 2;    // Broadcasting node rank
+}
+
+// Define the response for broadcast
+message BroadcastResponse {
+    bool success = 1;
+}
+
+// Define the gRPC service for the MPI-like framework
+service MPIService {
+    // Send a message from one node to another
+    rpc Send (SendRequest) returns (SendResponse);
+
+    // Receive a message from another node
+    rpc Recv (RecvRequest) returns (RecvResponse);
+
+    // Barrier synchronization between nodes
+    rpc Barrier (BarrierRequest) returns (BarrierResponse);
+
+    // Broadcast a message to all nodes
+    rpc Broadcast (BroadcastRequest) returns (BroadcastResponse);
+}
