@@ -1,23 +1,49 @@
 // grpc_server.go
 // This file implements the gRPC server logic, allowing nodes to receive messages
 // sent by other nodes in the MPI-like framework.
-
 package mpi
 
 import (
 	"context"
+	"log"
+	"net"
 
-	pb "github.com/Otter2022/MPIForAWS/proto"
+	"google.golang.org/grpc"
 )
 
-// MPIServer is the gRPC server for receiving messages in the MPI-like framework.
+// MPIServer is the gRPC server that handles incoming messages
 type MPIServer struct {
-	// UnimplementedMPIServerServer provides methods that must be implemented for the gRPC server.
-	pb.UnimplementedMPIServerServer
+	UnimplementedMPIServerServer
 }
 
-// SendMessage receives a message sent by another node.
-func (s *MPIServer) SendMessage(ctx context.Context, in *pb.Message) (*pb.Empty, error)
+// SendMessage is called whenever another node sends a message
+func (s *MPIServer) SendMessage(ctx context.Context, req *Message) (*Empty, error) {
+	log.Printf("Received message from node %d: %s", req.NodeRank, req.Content)
+	return &Empty{}, nil
+}
 
-// StartGRPCServer starts the gRPC server to listen for incoming messages.
-func StartGRPCServer()
+// StartGRPCServer starts the gRPC server to listen for incoming messages on the specified address
+func StartGRPCServer(address string) error {
+	// Create a TCP listener on the given address (e.g., ":50051")
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+		return err
+	}
+
+	// Create a new gRPC server
+	grpcServer := grpc.NewServer()
+
+	// Register the gRPC service (MPIServer)
+	RegisterMPIServerServer(grpcServer, &MPIServer{})
+
+	log.Printf("Starting gRPC server on %s", address)
+
+	// Start serving incoming connections
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+		return err
+	}
+
+	return nil
+}
