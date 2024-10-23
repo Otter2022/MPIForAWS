@@ -1,24 +1,23 @@
 // grpc_communicator.go
 // This file handles the gRPC communication between nodes in the MPI-like framework.
 // It implements the logic to send and receive messages using gRPC clients and servers.
-package communicator
+package mpi
 
 import (
 	"context"
 	"log"
 	"time"
 
-	pb "github.com/Otter2022/MPIForAWS/internal/mpi" // Replace with the correct path to your generated protobuf package
 	"google.golang.org/grpc"
 )
 
+// Communicator struct holds the gRPC client
 type Communicator struct {
-	client pb.MPIServerClient
+	client MPIServerClient
 }
 
-// NewCommunicator establishes a connection to another node's gRPC server using grpc.DialContext
+// NewCommunicator establishes a connection to another node's gRPC server
 func NewCommunicator(address string) (*Communicator, error) {
-	// Create a context with timeout for dialing
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -30,18 +29,17 @@ func NewCommunicator(address string) (*Communicator, error) {
 	}
 
 	// Create a new gRPC client
-	client := pb.NewMPIServerClient(conn)
+	client := NewMPIServerClient(conn)
 	return &Communicator{client: client}, nil
 }
 
 // SendMessage sends a message to the gRPC server on another node
 func (c *Communicator) SendMessage(content string, nodeRank int) error {
-	// Set up a context with a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	// Call the SendMessage function on the remote gRPC server
-	_, err := c.client.SendMessage(ctx, &pb.Message{
+	_, err := c.client.SendMessage(ctx, &Message{
 		Content:  content,
 		NodeRank: int32(nodeRank),
 	})
