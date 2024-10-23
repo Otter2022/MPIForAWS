@@ -7,8 +7,6 @@ package mpi
 
 import (
 	"log"
-
-	"github.com/Otter2022/MPIForAWS/internal/communicator"
 )
 
 // MPI_Init initializes the MPI environment and starts the gRPC server
@@ -25,7 +23,7 @@ func MPI_Init(address string) error {
 
 // MPI_Send sends a message to another node using gRPC
 func MPI_Send(targetAddress string, content string, nodeRank int) error {
-	comm, err := communicator.NewCommunicator(targetAddress)
+	comm, err := NewCommunicator(targetAddress)
 	if err != nil {
 		return err
 	}
