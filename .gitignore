@@ -8,6 +8,7 @@
 *.dylib
 *.test
 *.out
+cmd/
 
 # Go dependencies
 vendor/
