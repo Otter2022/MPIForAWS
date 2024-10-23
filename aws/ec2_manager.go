@@ -40,8 +40,8 @@ func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, insta
 	return instanceIds
 }
 
-// DescribeEC2Instances describes running EC2 instances
-func DescribeEC2Instances(svc *ec2.Client, instanceIds []string) {
+// DescribeEC2Instances describes running EC2 instances and returns their public IPs
+func DescribeEC2Instances(svc *ec2.Client, instanceIds []string) ([]string, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: instanceIds,
 	}
@@ -49,22 +49,29 @@ func DescribeEC2Instances(svc *ec2.Client, instanceIds []string) {
 	// Call DescribeInstances API
 	result, err := svc.DescribeInstances(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to describe EC2 instances: %v", err)
+		return nil, fmt.Errorf("failed to describe EC2 instances: %v", err)
 	}
 
-	// Iterate over the instances and log details
+	// Slice to store public IP addresses
+	var publicIPs []string
+
+	// Iterate over the instances and collect public IPs
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
 			log.Printf("Instance ID: %s", *instance.InstanceId)
 			log.Printf("Instance State: %s", instance.State.Name)
 			log.Printf("Instance Type: %s", instance.InstanceType)
 			if instance.PublicIpAddress != nil {
-				log.Printf("Public IP: %s", *instance.PublicIpAddress)
+				publicIP := *instance.PublicIpAddress
+				publicIPs = append(publicIPs, publicIP)
+				log.Printf("Public IP: %s", publicIP)
 			} else {
 				log.Println("Public IP: None")
 			}
 		}
 	}
+
+	return publicIPs, nil
 }
 
 // TerminateEC2Instances terminates EC2 instances
