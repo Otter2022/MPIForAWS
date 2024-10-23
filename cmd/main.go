@@ -5,7 +5,17 @@
 
 package main
 
+import (
+	"github.com/Otter2022/MPIForAWS/aws"
+)
+
 func main() {
-	// Initializes the MPI-like environment, launches EC2 instances, starts gRPC communication,
-	// and performs distributed computation. Finally, it shuts down the EC2 instances.
+	// Step 1: Create the key pair
+	CreateKeyPair(ec2Client, keyName)
+
+	// Step 2: Launch EC2 instances with the created key pair
+	ami := "ami-0ea3c35c5c3284d82" // Example AMI ID
+	instanceType := types.InstanceTypeT2Micro
+
+	instanceIds := LaunchEC2Instances(ec2Client, 2, ami, keyName, instanceType)
 }

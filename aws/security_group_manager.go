@@ -1,26 +1,39 @@
 // security_group_manager.go
 // This file manages the creation and configuration of EC2 security groups.
 // Security groups control inbound and outbound traffic, allowing gRPC communication between nodes.
-
 package aws
 
-// EC2Manager defines the interface for EC2 operations
-type EC2Manager interface {
-	LaunchEC2Instances(count int64) []string
-	DescribeEC2Instances(instanceIds []string)
-	TerminateEC2Instances(instanceIds []string)
+import (
+	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+)
+
+// Create a new security group
+func CreateSecurityGroup(svc *ec2.EC2, groupName, vpcId string) (*ec2.CreateSecurityGroupOutput, error) {
+	input := &ec2.CreateSecurityGroupInput{
+		GroupName:   aws.String(groupName),
+		Description: aws.String("Security group for gRPC MPI project"),
+		VpcId:       aws.String(vpcId),
+	}
+
+	result, err := svc.CreateSecurityGroup(input)
+	if err != nil {
+		log.Fatalf("Failed to create security group: %v", err)
+		return nil, err
+	}
+
+	log.Printf("Created security group with ID: %s", *result.GroupId)
+	return result, nil
 }
 
-// KeyPairManager defines the interface for key pair operations
-type KeyPairManager interface {
-	CreateKeyPair(keyName string)
-	DeleteKeyPair(keyName string)
-	DescribeKeyPair(keyName string)
+// Add ingress rule (e.g., allow SSH)
+func AuthorizeSecurityGroupIngress(svc *ec2.EC2, groupId string) {
+	// Add logic to allow traffic on specific ports
 }
 
-// SecurityGroupManager defines the interface for security group operations
-type SecurityGroupManager interface {
-	CreateSecurityGroup(groupName, vpcId string) string
-	AuthorizeSecurityGroupIngress(groupId string)
-	DeleteSecurityGroup(groupId string)
+// Delete a security group
+func DeleteSecurityGroup(svc *ec2.EC2, groupId string) {
+	// Add logic for deletion
 }
