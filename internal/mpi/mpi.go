@@ -14,7 +14,7 @@ func MPI_Init(address string) error {
 	// Start the gRPC server to handle incoming messages
 	go func() {
 		if err := StartGRPCServer(address); err != nil {
-			log.Fatalf("Failed to start gRPC server: %v", err)
+			log.Printf("Failed to start gRPC server: %v", err)
 		}
 	}()
 	log.Printf("MPI initialized and gRPC server started on %s", address)
@@ -31,7 +31,8 @@ func MPI_Send(targetAddress string, content string, nodeRank int) error {
 	// Send the message to the target node
 	err = comm.SendMessage(content, nodeRank)
 	if err != nil {
-		log.Fatalf("Failed to send message: %v", err)
+		log.Printf("Failed to send message: %v", err)
+		return err
 	}
 	return nil
 }

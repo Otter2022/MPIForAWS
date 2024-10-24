@@ -27,7 +27,7 @@ func StartGRPCServer(address string) error {
 	// Create a TCP listener on the given address (e.g., ":50051")
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Printf("Failed to listen: %v", err)
 		return err
 	}
 
@@ -41,7 +41,7 @@ func StartGRPCServer(address string) error {
 
 	// Start serving incoming connections
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		log.Printf("Failed to serve: %v", err)
 		return err
 	}
 
