@@ -20,7 +20,7 @@ func CreateKeyPair(svc *ec2.Client, keyName string) {
 	// v2 call includes the context.Context as the first argument
 	result, err := svc.CreateKeyPair(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to create key pair: %v", err)
+		log.Printf("Failed to create key pair: %v", err)
 	}
 
 	log.Printf("Created key pair: %s", *result.KeyName)
@@ -38,7 +38,7 @@ func DeleteKeyPair(svc *ec2.Client, keyName string) error {
 	// Call DeleteKeyPair API
 	_, err := svc.DeleteKeyPair(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to delete key pair: %v", err)
+		log.Printf("Failed to delete key pair: %v", err)
 		return err
 	}
 
@@ -63,7 +63,7 @@ func DescribeKeyPair(svc *ec2.Client, keyName string) {
 	// Call DescribeKeyPairs API
 	result, err := svc.DescribeKeyPairs(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to describe key pairs: %v", err)
+		log.Printf("Failed to describe key pairs: %v", err)
 		return
 	}
 

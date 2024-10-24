@@ -23,7 +23,7 @@ func CreateSecurityGroup(svc *ec2.Client, groupName, vpcId string) (*ec2.CreateS
 
 	result, err := svc.CreateSecurityGroup(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to create security group: %v", err)
+		log.Printf("Failed to create security group: %v", err)
 		return nil, err
 	}
 
@@ -53,7 +53,8 @@ func AuthorizeSecurityGroupIngress(svc *ec2.Client, groupId string) {
 	// Call AuthorizeSecurityGroupIngress API
 	_, err := svc.AuthorizeSecurityGroupIngress(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to authorize ingress for security group %s: %v", groupId, err)
+		log.Printf("Failed to authorize ingress for security group %s: %v", groupId, err)
+		return
 	}
 
 	log.Printf("Successfully added ingress rule to security group %s", groupId)
@@ -68,7 +69,7 @@ func DeleteSecurityGroup(svc *ec2.Client, groupId string) error {
 	// Call DeleteSecurityGroup API
 	_, err := svc.DeleteSecurityGroup(context.TODO(), input)
 	if err != nil {
-		return fmt.Errorf("Failed to delete security group %s: %v", groupId, err)
+		return fmt.Errorf("failed to delete security group %s: %v", groupId, err)
 	}
 
 	log.Printf("Successfully deleted security group: %s", groupId)

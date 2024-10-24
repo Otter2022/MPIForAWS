@@ -5,4 +5,6 @@
 package mpi
 
 // StartWorker starts the worker node logic. Master nodes send messages, while other nodes receive them.
-func StartWorker(config *Config)
+func StartWorker(config *Config) {
+	return
+}

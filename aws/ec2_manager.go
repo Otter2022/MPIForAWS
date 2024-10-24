@@ -19,7 +19,7 @@ import (
 type EC2ClientCreator struct{}
 
 // LaunchEC2Instances launches a specified number of EC2 instances with a given AMI and instance type.
-func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, instanceType types.InstanceType) []string {
+func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, instanceType types.InstanceType) ([]string, error) {
 	runResult, err := svc.RunInstances(context.TODO(), &ec2.RunInstancesInput{
 		ImageId:      aws.String(ami),  // AMI ID
 		InstanceType: instanceType,     // Instance type (e.g., t2.micro)
@@ -28,7 +28,8 @@ func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, insta
 		KeyName:      aws.String(keyName), // The name of your key pair
 	})
 	if err != nil {
-		log.Fatalf("Failed to create EC2 instances: %v", err)
+		log.Printf("Failed to create EC2 instances: %v", err)
+		return nil, err
 	}
 
 	instanceIds := []string{}
@@ -37,7 +38,7 @@ func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, insta
 	}
 
 	log.Printf("Created instances: %v", instanceIds)
-	return instanceIds
+	return instanceIds, nil
 }
 
 // DescribeEC2Instances describes running EC2 instances and returns their public IPs
@@ -75,7 +76,7 @@ func DescribeEC2Instances(svc *ec2.Client, instanceIds []string) ([]string, erro
 }
 
 // TerminateEC2Instances terminates EC2 instances
-func TerminateEC2Instances(svc *ec2.Client, instanceIds []string) {
+func TerminateEC2Instances(svc *ec2.Client, instanceIds []string) error {
 	input := &ec2.TerminateInstancesInput{
 		InstanceIds: instanceIds, // No need to use aws.StringSlice here as it already expects []string
 	}
@@ -83,7 +84,8 @@ func TerminateEC2Instances(svc *ec2.Client, instanceIds []string) {
 	// Call the TerminateInstances API
 	result, err := svc.TerminateInstances(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to terminate EC2 instances: %v", err)
+		log.Printf("Failed to terminate EC2 instances: %v", err)
+		return err
 	}
 
 	for _, instance := range result.TerminatingInstances {
@@ -92,6 +94,8 @@ func TerminateEC2Instances(svc *ec2.Client, instanceIds []string) {
 			instance.CurrentState.Name,
 			instance.PreviousState.Name)
 	}
+
+	return nil
 }
 
 // CreateClient method creates the EC2 client using AWS SDK v2

@@ -11,4 +11,6 @@ type Config struct {
 }
 
 // LoadConfig loads the configuration from environment variables (NODE_RANK, TOTAL_NODES).
-func LoadConfig() (*Config, error)
+func LoadConfig() (*Config, error) {
+	return nil, nil
+}
