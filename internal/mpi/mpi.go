@@ -10,7 +10,8 @@ import (
 )
 
 // MPI_Init initializes the MPI environment and starts the gRPC server
-func MPI_Init(address string) error {
+func MPI_Init(port string) error {
+	address := "0.0.0.0:" + port
 	// Start the gRPC server to handle incoming messages
 	go func() {
 		if err := StartGRPCServer(address); err != nil {
