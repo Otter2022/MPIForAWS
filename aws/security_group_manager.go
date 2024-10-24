@@ -5,6 +5,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -59,7 +60,7 @@ func AuthorizeSecurityGroupIngress(svc *ec2.Client, groupId string) {
 }
 
 // Delete a security group
-func DeleteSecurityGroup(svc *ec2.Client, groupId string) {
+func DeleteSecurityGroup(svc *ec2.Client, groupId string) error {
 	input := &ec2.DeleteSecurityGroupInput{
 		GroupId: aws.String(groupId),
 	}
@@ -67,8 +68,9 @@ func DeleteSecurityGroup(svc *ec2.Client, groupId string) {
 	// Call DeleteSecurityGroup API
 	_, err := svc.DeleteSecurityGroup(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to delete security group %s: %v", groupId, err)
+		return fmt.Errorf("Failed to delete security group %s: %v", groupId, err)
 	}
 
 	log.Printf("Successfully deleted security group: %s", groupId)
+	return nil
 }
