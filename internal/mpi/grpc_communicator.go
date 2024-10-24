@@ -24,7 +24,7 @@ func NewCommunicator(address string) (*Communicator, error) {
 	// Connect to the gRPC server using DialContext
 	conn, err := grpc.DialContext(ctx, address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatalf("Failed to connect: %v", err)
+		log.Printf("Failed to connect: %v", err)
 		return nil, err
 	}
 
