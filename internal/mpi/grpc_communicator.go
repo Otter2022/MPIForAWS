@@ -5,24 +5,32 @@ package mpi
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
-// Communicator struct holds the gRPC client
+// Communicator struct holds the gRPC client and the connection
 type Communicator struct {
 	client MPIServerClient
+	conn   *grpc.ClientConn // Store the connection to close later
 }
 
-// NewCommunicator establishes a connection to another node's gRPC server
+// NewCommunicator establishes a secure connection to another node's gRPC server
 func NewCommunicator(address string) (*Communicator, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) // Increased timeout for reliability
 	defer cancel()
 
-	// Connect to the gRPC server using DialContext
-	conn, err := grpc.DialContext(ctx, address, grpc.WithInsecure(), grpc.WithBlock())
+	// Load secure TLS credentials
+	tlsCredentials := credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true, // This disables server certificate validation (insecure, use only for local testing)
+	})
+
+	// Connect to the gRPC server using secure TLS credentials
+	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(tlsCredentials), grpc.WithBlock())
 	if err != nil {
 		log.Printf("Failed to connect: %v", err)
 		return nil, err
@@ -30,12 +38,21 @@ func NewCommunicator(address string) (*Communicator, error) {
 
 	// Create a new gRPC client
 	client := NewMPIServerClient(conn)
-	return &Communicator{client: client}, nil
+	return &Communicator{client: client, conn: conn}, nil
+}
+
+// Close closes the gRPC connection
+func (c *Communicator) Close() error {
+	if err := c.conn.Close(); err != nil {
+		log.Printf("Failed to close connection: %v", err)
+		return err
+	}
+	return nil
 }
 
 // SendMessage sends a message to the gRPC server on another node
 func (c *Communicator) SendMessage(content string, nodeRank int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // Increased timeout for sending
 	defer cancel()
 
 	// Call the SendMessage function on the remote gRPC server

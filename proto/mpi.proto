@@ -7,6 +7,7 @@ option go_package = "../internal/mpi;mpi";
 // The gRPC service definition
 service MPIServer {
     rpc SendMessage(Message) returns (Empty) {}
+    rpc ReceiveMessage (Message) returns (Empty) {};
 }
 
 // The message format that nodes will use to send messages
