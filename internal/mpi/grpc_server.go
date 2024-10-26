@@ -4,7 +4,6 @@
 package mpi
 
 import (
-	"context"
 	"log"
 	"net"
 
@@ -17,15 +16,15 @@ type MPIServer struct {
 }
 
 // SendMessage is called whenever another node sends a message
-func (s *MPIServer) SendMessage(ctx context.Context, req *Message) (*Empty, error) {
-	log.Printf("Received message from node %d: %s", req.NodeRank, req.Content)
-	return &Empty{}, nil
-}
+// func (s *MPIServer) SendMessage(ctx context.Context, req *Message) (*Empty, error) {
+// 	log.Printf("Received message from node %d: %s", req.NodeRank, req.Content)
+// 	return &Empty{}, nil
+// }
 
 // StartGRPCServer starts the gRPC server to listen for incoming messages on the specified address
 func StartGRPCServer(address string) error {
 	// Create a TCP listener on the given address (e.g., ":50051")
-	lis, err := net.Listen("tcp", address)
+	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Printf("Failed to listen: %v", err)
 		return err

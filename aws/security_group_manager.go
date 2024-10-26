@@ -71,7 +71,8 @@ func AuthorizeSecurityGroupIngress(svc *ec2.Client, groupId string, port int32) 
 	// Call AuthorizeSecurityGroupIngress API
 	_, err := svc.AuthorizeSecurityGroupIngress(context.TODO(), input)
 	if err != nil {
-		log.Fatalf("Failed to authorize ingress for security group %s: %v", groupId, err)
+		log.Printf("Failed to authorize ingress for security group %s: %v", groupId, err)
+		return
 	}
 
 	log.Printf("Successfully added ingress rules for ports %v to security group %s", port, groupId)
