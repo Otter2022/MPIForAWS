@@ -21,17 +21,17 @@ type EC2ClientCreator struct{}
 // LaunchEC2Instances launches a specified number of EC2 instances with a given AMI and instance type.
 func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, instanceType types.InstanceType, securityGroupId string, subnetId string) ([]string, error) {
 	runResult, err := svc.RunInstances(context.TODO(), &ec2.RunInstancesInput{
-		ImageId:          aws.String(ami),  // AMI ID
-		InstanceType:     instanceType,     // Instance type (e.g., t2.micro)
-		MinCount:         aws.Int32(count), // Number of instances
-		MaxCount:         aws.Int32(count),
-		KeyName:          aws.String(keyName),       // The name of your key pair
-		SecurityGroupIds: []string{securityGroupId}, // Security Group ID(s)
-		SubnetId:         aws.String(subnetId),
+		ImageId:      aws.String(ami),  // AMI ID
+		InstanceType: instanceType,     // Instance type (e.g., t2.micro)
+		MinCount:     aws.Int32(count), // Number of instances
+		MaxCount:     aws.Int32(count),
+		KeyName:      aws.String(keyName), // The name of your key pair
 		NetworkInterfaces: []types.InstanceNetworkInterfaceSpecification{
 			{
-				AssociatePublicIpAddress: aws.Bool(true),
-				DeviceIndex:              aws.Int32(0),
+				AssociatePublicIpAddress: aws.Bool(true),            // Assigns a public IP
+				DeviceIndex:              aws.Int32(0),              // Primary network interface
+				SubnetId:                 aws.String(subnetId),      // Specifies the subnet
+				Groups:                   []string{securityGroupId}, // Security Group
 			},
 		},
 	})
