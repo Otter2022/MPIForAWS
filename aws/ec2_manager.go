@@ -28,6 +28,12 @@ func LaunchEC2Instances(svc *ec2.Client, count int32, ami, keyName string, insta
 		KeyName:          aws.String(keyName),       // The name of your key pair
 		SecurityGroupIds: []string{securityGroupId}, // Security Group ID(s)
 		SubnetId:         aws.String(subnetId),
+		NetworkInterfaces: []types.InstanceNetworkInterfaceSpecification{
+			{
+				AssociatePublicIpAddress: aws.Bool(true),
+				DeviceIndex:              aws.Int32(0),
+			},
+		},
 	})
 	if err != nil {
 		log.Printf("Failed to create EC2 instances: %v", err)
