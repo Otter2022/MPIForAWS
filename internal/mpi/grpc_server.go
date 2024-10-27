@@ -26,7 +26,7 @@ type MPIServer struct {
 func StartGRPCServer(address string) error {
 	// Create a TCP listener on the given address (e.g., ":50051")
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
-	time.Sleep(1000000 * time.Second)
+	time.Sleep(1000000 * time.Minute)
 
 	if err != nil {
 		log.Printf("Failed to listen: %v", err)
