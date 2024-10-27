@@ -5,16 +5,33 @@
 package mpi
 
 import (
+	"fmt"
 	"log"
+
+	myaws "github.com/Otter2022/MPIForAWS/aws"
 )
 
 // MPI_Init initializes the gRPC server for MPI-like communication on a fixed port (50051).
 // This setup allows the server to send and receive messages on the same port.
-func MPI_Init(ip string) error {
-	port := "50051"
-	address := ip + ":" + port // Bind to the specific private IP and port
+func MPI_Init(ip, bucketName string) error {
+	// Initialize S3 client
+	s3Client, err := myaws.NewS3Client(bucketName)
+	if err != nil {
+		return fmt.Errorf("failed to initialize S3 client: %v", err)
+	}
 
-	// Start the gRPC server to handle incoming messages
+	// Example: Download shared configuration file
+	err = s3Client.DownloadFile("config.yaml", "/tmp/config.yaml")
+	if err != nil {
+		log.Printf("Failed to download config file: %v", err)
+	} else {
+		log.Println("Successfully downloaded config file from S3")
+	}
+
+	// Continue with the setup of the gRPC server
+	port := "50051"
+	address := ip + ":" + port
+
 	go func() {
 		if err := StartGRPCServer(address); err != nil {
 			log.Printf("Failed to start gRPC server on %s: %v", address, err)
@@ -23,16 +40,31 @@ func MPI_Init(ip string) error {
 	}()
 
 	log.Printf("MPI initialized and gRPC server started on %s", address)
-	return nil // Return from the main function
+	return nil
 }
 
 // MPI_Send sends a message to another node using gRPC
 // It connects to the target node's gRPC server on the default port 50051.
-func MPI_Send(targetIP string, content string, nodeRank int) error {
-	targetAddress := targetIP + ":50051" // Use the fixed port 50051 for all nodes
+func MPI_Send(targetIP, content string, nodeRank int, bucketName string) error {
+	targetAddress := targetIP + ":50051"
 	comm, err := NewCommunicator(targetAddress)
 	if err != nil {
 		return err
+	}
+
+	s3Client, err := myaws.NewS3Client(bucketName)
+	if err != nil {
+		return fmt.Errorf("failed to initialize S3 client: %v", err)
+	}
+
+	// Example logic for large content
+	if len(content) > 1024 { // Define a size threshold as needed
+		s3Key := fmt.Sprintf("node%d-message.txt", nodeRank)
+		err := s3Client.UploadFile("/tmp/local_large_file.txt", s3Key)
+		if err != nil {
+			return fmt.Errorf("failed to upload large message to S3: %v", err)
+		}
+		content = fmt.Sprintf("s3://%s/%s", s3Client.Bucket, s3Key) // Pass S3 reference as content
 	}
 
 	// Send the message to the target node
