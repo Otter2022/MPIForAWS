@@ -5,6 +5,7 @@ package mpi
 
 import (
 	"log"
+	"net"
 
 	"google.golang.org/grpc"
 )
@@ -23,11 +24,11 @@ type MPIServer struct {
 // StartGRPCServer starts the gRPC server to listen for incoming messages on the specified address
 func StartGRPCServer(address string) error {
 	// Create a TCP listener on the given address (e.g., ":50051")
-	// lis, err := net.Listen("tcp", ":50051")
-	// if err != nil {
-	// 	log.Printf("Failed to listen: %v", err)
-	// 	return err
-	// }
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		log.Printf("Failed to listen: %v", err)
+		return err
+	}
 
 	// Create a new gRPC server
 	grpcServer := grpc.NewServer()
@@ -38,10 +39,10 @@ func StartGRPCServer(address string) error {
 	log.Printf("Starting gRPC server on %s", address)
 
 	// // Start serving incoming connections
-	// if err := grpcServer.Serve(lis); err != nil {
-	// 	log.Printf("Failed to serve: %v", err)
-	// 	return err
-	// }
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Printf("Failed to serve: %v", err)
+		return err
+	}
 
 	return nil
 }

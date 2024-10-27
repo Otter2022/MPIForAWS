@@ -29,7 +29,7 @@ func MPI_Init(ip string) error {
 // MPI_Send sends a message to another node using gRPC
 // It connects to the target node's gRPC server on the default port 50051.
 func MPI_Send(targetIP string, content string, nodeRank int) error {
-	targetAddress := targetIP + ":8081" // Use the fixed port 50051 for all nodes
+	targetAddress := targetIP + ":50051" // Use the fixed port 50051 for all nodes
 	comm, err := NewCommunicator(targetAddress)
 	if err != nil {
 		return err
