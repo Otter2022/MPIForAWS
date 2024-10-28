@@ -55,3 +55,6 @@ test-results.xml
 test-output/
 tests/
 localstack/
+
+#aws
+config.yaml

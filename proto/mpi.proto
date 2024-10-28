@@ -2,19 +2,18 @@ syntax = "proto3";
 
 package mpi;
 
-option go_package = "../internal/mpi;mpi";
+option go_package = "internal/mpi;mpi";
 
-// The gRPC service definition
-service MPIServer {
-    rpc SendMessage(Message) returns (Empty) {}
-    rpc ReceiveMessage (Message) returns (Empty) {};
+service MPIService {
+  rpc SendMessage(MessageRequest) returns (MessageResponse);
 }
 
-// The message format that nodes will use to send messages
-message Message {
-    string content = 1;
-    int32 nodeRank = 2;
+// Message structure
+message MessageRequest {
+  int32 rank = 1;
+  string data = 2;
 }
 
-// Acknowledgment of a received message
-message Empty {}
+message MessageResponse {
+  bool success = 1;
+}

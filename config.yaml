@@ -1,0 +1,20 @@
+aws:
+  region: "us-east-1"
+  ami: "ami-0dba2cb6798deb6d8"
+  instanceType: "t2.micro"
+  instanceCount: 2
+  securityGroupId: "sg-0c45c7d63c6392538"
+  subnetId: "subnet-0dccdc82a6f3df2ed"
+  keyName: "newkeypair"
+  bucketName: "CloudMPI_bucket"
+
+s3:
+  configFileKey: "config.yaml"
+  tempFilePath: "/tmp/config.yaml"
+
+network:
+  grpcPort: 50051
+
+logging:
+  logFilePath: "mpi_framework.log"
+  logLevel: "INFO"
