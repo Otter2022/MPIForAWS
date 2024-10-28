@@ -7,19 +7,12 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
 // getInstanceIPs fetches IP addresses of all instances in the specified subnet
-func getInstanceIPs(subnetID string) ([]string, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
-	if err != nil {
-		return nil, fmt.Errorf("unable to load SDK config: %v", err)
-	}
-
-	svc := ec2.NewFromConfig(cfg)
+func getInstanceIPs(client *ec2.Client, subnetID string) ([]string, error) {
 	input := &ec2.DescribeInstancesInput{
 		Filters: []ec2Types.Filter{
 			{
@@ -30,7 +23,7 @@ func getInstanceIPs(subnetID string) ([]string, error) {
 	}
 
 	var ips []string
-	paginator := ec2.NewDescribeInstancesPaginator(svc, input)
+	paginator := ec2.NewDescribeInstancesPaginator(client, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(context.TODO())
 		if err != nil {
@@ -38,7 +31,9 @@ func getInstanceIPs(subnetID string) ([]string, error) {
 		}
 		for _, reservation := range page.Reservations {
 			for _, instance := range reservation.Instances {
-				ips = append(ips, *instance.PrivateIpAddress)
+				if instance.PrivateIpAddress != nil {
+					ips = append(ips, *instance.PrivateIpAddress)
+				}
 			}
 		}
 	}
