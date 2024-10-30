@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -58,47 +60,95 @@ func GetInstanceIPandIDs(client *ec2.Client, subnetID string) ([]InstanceInfo, e
 
 func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo) ([]InstanceInfo, error) {
 	n := len(instances)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errorsOccurred := false
 
-	for i, instance := range instances {
-		var commands []string
-		commands = append(commands, fmt.Sprintf("EXPORT MPI_SIZE=%d", n))
-		commands = append(commands, fmt.Sprintf("EXPORT MPI_RANK=%d", i))
-		for x := range n {
-			if x == i {
-				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"0.0.0.0:50051\"", i))
-				instances[i].InstanceRank = i
-			} else {
-				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"%v:50051\"", i, instance.PrivateIP))
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			var envVars []string
+			envVars = append(envVars, fmt.Sprintf("export MPI_SIZE=%d", n))
+			envVars = append(envVars, fmt.Sprintf("export MPI_RANK=%d", i))
+
+			for x := 0; x < n; x++ {
+				if x == i {
+					envVars = append(envVars, fmt.Sprintf("export MPI_ADDRESS_%d=\"0.0.0.0:50051\"", x))
+					instances[i].InstanceRank = i
+				} else {
+					envVars = append(envVars, fmt.Sprintf("export MPI_ADDRESS_%d=\"%s:50051\"", x, instances[x].PrivateIP))
+				}
 			}
-		}
-		// commands = append(commands, "cd cloud-native-mpi-for-aws")
-		// commands = append(commands, "go build -o mpi_program")
-		// commands = append(commands, "./mpi_program > ../output.txt")
 
-		script := `#!/bin/bash
-		%s
-		cd cloud-native-mpi-for-aws
-		go build -o mpi_program
-		./mpi_program > output.txt 2>&1`
+			// Combine commands into a single script
+			script := `#!/bin/bash
+%s
+cd cloud-native-mpi-for-aws
+go build -o mpi_program
+./mpi_program > output.txt 2>&1`
 
-		allCommands := strings.Join(commands, "\n")
-		finalScript := fmt.Sprintf(script, allCommands)
+			allCommands := strings.Join(envVars, "\n")
+			finalScript := fmt.Sprintf(script, allCommands)
 
-		input := &ssm.SendCommandInput{
-			DocumentName: aws.String("AWS-RunShellScript"),
-			Parameters: map[string][]string{
-				"commands": {finalScript},
-			},
-			InstanceIds:    []string{instances[i].InstanceID},
-			TimeoutSeconds: aws.Int32(600),
-		}
+			input := &ssm.SendCommandInput{
+				DocumentName: aws.String("AWS-RunShellScript"),
+				Parameters: map[string][]string{
+					"commands": {finalScript},
+				},
+				InstanceIds:    []string{instances[i].InstanceID},
+				TimeoutSeconds: aws.Int32(600),
+			}
+			result, err := client.SendCommand(context.TODO(), input)
+			if err != nil {
+				fmt.Printf("Failed to send command to instance %s: %v\n", instances[i].InstanceID, err)
+				mu.Lock()
+				errorsOccurred = true
+				mu.Unlock()
+				return
+			} else {
+				fmt.Printf("SSM Command Result for instance %s: %v\n", instances[i].InstanceID, result)
+			}
 
-		result, err := client.SendCommand(context.TODO(), input)
-		if err != nil {
-			return nil, err
-		} else {
-			fmt.Printf("SSM Command Result: %v\n", result)
-		}
+			// Optionally, wait for command execution to complete and collect outputs
+			// This can be done using GetCommandInvocation
+
+			// Get Command Invocation Result
+			commandID := *result.Command.CommandId
+			invocationInput := &ssm.GetCommandInvocationInput{
+				CommandId:  aws.String(commandID),
+				InstanceId: aws.String(instances[i].InstanceID),
+			}
+
+			// Poll for command completion
+			for {
+				invocationResult, err := client.GetCommandInvocation(context.TODO(), invocationInput)
+				if err != nil {
+					fmt.Printf("Failed to get command invocation for instance %s: %v\n", instances[i].InstanceID, err)
+					mu.Lock()
+					errorsOccurred = true
+					mu.Unlock()
+					return
+				}
+
+				// Check status by comparing to string values
+				if invocationResult.Status != "InProgress" && invocationResult.Status != "Pending" {
+					fmt.Printf("Command Invocation Status for instance %s: %s\n", instances[i].InstanceID, invocationResult.Status)
+					fmt.Printf("Standard Output for instance %s:\n%s\n", instances[i].InstanceID, aws.ToString(invocationResult.StandardOutputContent))
+					fmt.Printf("Standard Error for instance %s:\n%s\n", instances[i].InstanceID, aws.ToString(invocationResult.StandardErrorContent))
+					break
+				}
+
+				// Sleep for a short duration before polling again
+				time.Sleep(2 * time.Second)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	if errorsOccurred {
+		return instances, fmt.Errorf("errors occurred during command execution")
 	}
 
 	return instances, nil
