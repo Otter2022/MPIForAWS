@@ -5,8 +5,10 @@ package aws
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -18,6 +20,8 @@ type InstanceInfo struct {
 	PrivateIP    string
 	InstanceRank int
 }
+
+type SSMClientCreator struct{}
 
 // GetInstanceIPs fetches the instance IDs and IP addresses of all instances in the specified subnet
 func GetInstanceIPandIDs(client *ec2.Client, subnetID string) ([]InstanceInfo, error) {
@@ -85,4 +89,24 @@ func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo)
 	}
 
 	return instances, nil
+}
+
+// CreateClient method creates the EC2 client using AWS SDK v2
+func (s *SSMClientCreator) CreateClient() (*ssm.Client, error) {
+	var cfg aws.Config
+	var err error
+
+	region := os.Getenv("AWS_REGION")
+	if region != "" {
+		cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+	} else {
+		cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to load AWS config: %w", err)
+	}
+
+	client := ssm.NewFromConfig(cfg)
+	return client, err
 }
