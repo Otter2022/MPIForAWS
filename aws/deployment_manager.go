@@ -20,7 +20,7 @@ type InstanceInfo struct {
 }
 
 // GetInstanceIPs fetches the instance IDs and IP addresses of all instances in the specified subnet
-func GetInstanceIPs(client *ec2.Client, subnetID string) ([]InstanceInfo, error) {
+func GetInstanceIPandIDs(client *ec2.Client, subnetID string) ([]InstanceInfo, error) {
 	input := &ec2.DescribeInstancesInput{
 		Filters: []ec2Types.Filter{
 			{
@@ -51,7 +51,7 @@ func GetInstanceIPs(client *ec2.Client, subnetID string) ([]InstanceInfo, error)
 	return instances, nil
 }
 
-func InitializeEnviroments(client *ssm.Client, instances []InstanceInfo) ([]instanceInfo, error) {
+func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo) ([]InstanceInfo, error) {
 	n := len(instances)
 
 	for i, instance := range instances {
@@ -60,12 +60,15 @@ func InitializeEnviroments(client *ssm.Client, instances []InstanceInfo) ([]inst
 		commands = append(commands, fmt.Sprintf("EXPORT MPI_RANK=%d", i))
 		for x := range n {
 			if x == i {
-				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"%0.0.0.0:50051\"", i))
+				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"0.0.0.0:50051\"", i))
 				instances[i].InstanceRank = i
 			} else {
 				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"%v\"", i, instance.PrivateIP))
 			}
 		}
+		commands = append(commands, "cd mpi_program")
+		commands = append(commands, "go build -o mpi_program")
+		commands = append(commands, "./mpi_program > ../output.txt")
 		input := &ssm.SendCommandInput{
 			DocumentName: aws.String("Make enviroment variables"),
 			Parameters: map[string][]string{
