@@ -85,7 +85,6 @@ func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo)
 			script := `#!/bin/bash
 %s
 cd cloud-native-mpi-for-aws
-go build -o mpi_program
 ./mpi_program > output.txt 2>&1`
 
 			allCommands := strings.Join(envVars, "\n")
