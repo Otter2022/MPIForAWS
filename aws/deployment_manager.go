@@ -67,7 +67,7 @@ func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo)
 				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"0.0.0.0:50051\"", i))
 				instances[i].InstanceRank = i
 			} else {
-				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"%v\"", i, instance.PrivateIP))
+				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"%v:50051\"", i, instance.PrivateIP))
 			}
 		}
 		commands = append(commands, "cd cloud-native-mpi-for-aws")
