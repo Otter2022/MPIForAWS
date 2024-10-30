@@ -74,7 +74,7 @@ func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo)
 		commands = append(commands, "go build -o mpi_program")
 		commands = append(commands, "./mpi_program > ../output.txt")
 		input := &ssm.SendCommandInput{
-			DocumentName: aws.String("Make enviroment variables"),
+			DocumentName: aws.String("Makeenviromentvariables"),
 			Parameters: map[string][]string{
 				"commands": commands,
 			},
