@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -70,21 +71,33 @@ func InitializeEnviromentsAndBuild(client *ssm.Client, instances []InstanceInfo)
 				commands = append(commands, fmt.Sprintf("EXPORT MPI_ADDRESS_%d=\"%v:50051\"", i, instance.PrivateIP))
 			}
 		}
-		commands = append(commands, "cd cloud-native-mpi-for-aws")
-		commands = append(commands, "go build -o mpi_program")
-		commands = append(commands, "./mpi_program > ../output.txt")
+		// commands = append(commands, "cd cloud-native-mpi-for-aws")
+		// commands = append(commands, "go build -o mpi_program")
+		// commands = append(commands, "./mpi_program > ../output.txt")
+
+		script := `#!/bin/bash
+		%s
+		cd cloud-native-mpi-for-aws
+		go build -o mpi_program
+		./mpi_program > output.txt 2>&1`
+
+		allCommands := strings.Join(commands, "\n")
+		finalScript := fmt.Sprintf(script, allCommands)
+
 		input := &ssm.SendCommandInput{
-			DocumentName: aws.String("Makeenviromentvariables"),
+			DocumentName: aws.String("AWS-RunShellScript"),
 			Parameters: map[string][]string{
-				"commands": commands,
+				"commands": {finalScript},
 			},
-			InstanceIds: []string{instances[i].InstanceID},
+			InstanceIds:    []string{instances[i].InstanceID},
+			TimeoutSeconds: aws.Int32(600),
 		}
+
 		result, err := client.SendCommand(context.TODO(), input)
 		if err != nil {
 			return nil, err
 		} else {
-			fmt.Printf("%v", result)
+			fmt.Printf("SSM Command Result: %v\n", result)
 		}
 	}
 
