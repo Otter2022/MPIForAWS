@@ -52,21 +52,6 @@ func MPI_Send(targetIP, content string, nodeRank int, bucketName string) error {
 		return err
 	}
 
-	s3Client, err := myaws.NewS3Client(bucketName)
-	if err != nil {
-		return fmt.Errorf("failed to initialize S3 client: %v", err)
-	}
-
-	// Example logic for large content
-	if len(content) > 1024 { // Define a size threshold as needed
-		s3Key := fmt.Sprintf("node%d-message.txt", nodeRank)
-		err := s3Client.UploadFile("/tmp/local_large_file.txt", s3Key)
-		if err != nil {
-			return fmt.Errorf("failed to upload large message to S3: %v", err)
-		}
-		content = fmt.Sprintf("s3://%s/%s", s3Client.Bucket, s3Key) // Pass S3 reference as content
-	}
-
 	// Send the message to the target node
 	err = comm.SendMessage(content, nodeRank)
 	if err != nil {
