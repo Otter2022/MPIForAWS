@@ -90,6 +90,8 @@ cd cloud-native-mpi-for-aws
 			allCommands := strings.Join(envVars, "\n")
 			finalScript := fmt.Sprintf(script, allCommands)
 
+			fmt.Printf("%v", finalScript)
+
 			input := &ssm.SendCommandInput{
 				DocumentName: aws.String("AWS-RunShellScript"),
 				Parameters: map[string][]string{
